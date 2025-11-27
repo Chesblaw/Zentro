@@ -1,38 +1,6 @@
 const rateLimitService = require("../services/rateLimitService");
 const rateLimitConfig = require("../config/rateLimiting");
 
-import rateLimit from "express-rate-limit"
-
-export const analyticsRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 100, 
-  message: {
-    error: "Too many analytics requests, please try again later",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-export const stressTestRateLimit = rateLimit({
-  windowMs: 60 * 60 * 1000, 
-  max: 10, 
-  message: {
-    error: "Too many stress test requests, please try again later",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-export const realTimeRateLimit = rateLimit({
-  windowMs: 1 * 60 * 1000, 
-  max: 60, 
-  message: {
-    error: "Too many real-time update requests",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
 const createRateLimiter = (options = {}) => {
   const config = { ...rateLimitConfig.default, ...options };
 
@@ -46,15 +14,15 @@ const createRateLimiter = (options = {}) => {
       const ip = req.ip;
       const userId = req.user?.id;
 
-      // Check blacklist first
-      if (rateLimitService.isBlacklisted(ip, userId)) {
-        await rateLimitService.recordViolation(req, "blacklist", 0, 1);
-        return res.status(403).json({
-          error: "Access denied",
-          type: "blacklist",
-          message: "Your IP or account has been blacklisted",
-        });
-      }
+      // // Check blacklist first
+      // if (rateLimitService.isBlacklisted(ip, userId)) {
+      //   await rateLimitService.recordViolation(req, "blacklist", 0, 1);
+      //   return res.status(403).json({
+      //     error: "Access denied",
+      //     type: "blacklist",
+      //     message: "Your IP or account has been blacklisted",
+      //   });
+      // }
 
       // Skip rate limiting for whitelisted IPs/users
       if (rateLimitService.isWhitelisted(ip, userId)) {

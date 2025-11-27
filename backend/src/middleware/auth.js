@@ -1,5 +1,5 @@
 const jwtService = require("../config/index");
-const User = require("../models/User");
+const User = require("../database/models/user");
 
 const requireAuth = async (req, res, next) => {
   try {
@@ -133,11 +133,11 @@ const requireRole = (...roles) => {
   };
 };
 
-const start = Date.now();
-res.on("finish", () => {
-  const duration = Date.now() - start;
-  console.log(`[AUTH] User ${req.user?._id} - ${duration}ms`);
-});
+// const start = Date.now();
+// res.on("finish", () => {
+//   const duration = Date.now() - start;
+//   console.log(`[AUTH] User ${req.user?._id} - ${duration}ms`);
+// });
 
 module.exports = {
   requireAuth,
