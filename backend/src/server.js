@@ -6,6 +6,7 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const { connectDB } = require("./database/connection");
+const newsRoutes = require("./routes/news");
 
 const logger = require("./utils/logger");
 const config = require("./config/environment");
@@ -43,6 +44,8 @@ app.use("/api/user", (req, res, next) => {
     },
   })(req, res, next);
 });
+
+app.use("/api/news", newsRoutes);
 
 const shutdown = () => {
   logger.info("Shutdown signal received. Cleaning up...");

@@ -16,6 +16,16 @@ const requireAuth = async (req, res, next) => {
     const token = jwtService.jwt.extractTokenFromHeader(authHeader);
     const decoded = jwtService.jwt.verifyAccessToken(token);
 
+    // Check token blacklist BEFORE loading user
+    const tokenBlacklist = jwtService.tokenBlacklist;
+    if (await tokenBlacklist.isBlacklisted(token)) {
+      return res.status(401).json({
+        success: false,
+        message: "Token revoked",
+        code: "TOKEN_REVOKED",
+      });
+    }
+
     const user = await User.findById(decoded.userId);
     if (!user) {
       return res.status(401).json({
@@ -24,7 +34,7 @@ const requireAuth = async (req, res, next) => {
         code: "USER_NOT_FOUND",
       });
     }
-    
+
     if (!user.isActive) {
       return res.status(403).json({
         success: false,
@@ -32,17 +42,19 @@ const requireAuth = async (req, res, next) => {
         code: "USER_INACTIVE",
       });
     }
-        req.user = user;
+
+    req.user = user;
     req.token = token;
 
     if (!user.emailVerified) {
       return res.status(403).json({
         success: false,
-        message: "Please verify your email address to access this resource",
+        message: "Please verify your email address",
         code: "EMAIL_NOT_VERIFIED",
       });
     }
 
+    // Prevent access with old tokens after password reset
     if (
       user.passwordChangedAt &&
       decoded.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)
@@ -54,7 +66,8 @@ const requireAuth = async (req, res, next) => {
       });
     }
 
-    next();
+    return next();
+
   } catch (error) {
     console.error("Auth middleware error:", error);
 
@@ -72,15 +85,6 @@ const requireAuth = async (req, res, next) => {
       code: "TOKEN_INVALID",
     });
   }
-
-const tokenBlacklist = jwtService.tokenBlacklist;
-  if (await tokenBlacklist.isBlacklisted(token)) {
-  return res.status(401).json({
-    success: false,
-    message: "Token revoked",
-    code: "TOKEN_REVOKED",
-  });
-}
 };
 
 const requireGuest = (req, res, next) => {
@@ -96,9 +100,7 @@ const requireGuest = (req, res, next) => {
         message: "Already authenticated",
         code: "ALREADY_AUTHENTICATED",
       });
-    } catch (_) {
-      // ignore invalid token, continue as guest
-    }
+    } catch (_) {}
   }
 
   next();
@@ -132,12 +134,6 @@ const requireRole = (...roles) => {
     next();
   };
 };
-
-// const start = Date.now();
-// res.on("finish", () => {
-//   const duration = Date.now() - start;
-//   console.log(`[AUTH] User ${req.user?._id} - ${duration}ms`);
-// });
 
 module.exports = {
   requireAuth,
