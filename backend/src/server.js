@@ -46,6 +46,8 @@ app.use("/api/user", (req, res, next) => {
 });
 
 app.use("/api/news", newsRoutes);
+app.use('/api', require('./routes'));
+
 
 const shutdown = () => {
   logger.info("Shutdown signal received. Cleaning up...");
