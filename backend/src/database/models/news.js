@@ -187,7 +187,7 @@ newsSchema.statics.searchNews = function(query, options = {}) {
 
 
 // Elasticsearch indexing hook (non-intrusive)
-const searchService = require('../services/search.service');
+const searchService = require('../../services/search.service');
 newsSchema.post('save', function(doc) {
   searchService.indexDocument({
     index: 'news',
